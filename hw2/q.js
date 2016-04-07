@@ -121,12 +121,22 @@ var cleanup_query = new ApplyNode(function(row){
 
 //// Implement a call-chaining interface
 
-// ...
-
 Q = Object.create(new AllNode());
 
+ASTNode.prototype.filter = function(callback){
+    var f = new FilterNode(callback);
+    return new ThenNode(this, f);
+}
 
+ASTNode.prototype.apply = function(callback){
+    var f = new ApplyNode(callback);
+    return new ThenNode(this, f);
+}
 
+ASTNode.prototype.count = function(){
+    var f = new CountNode();
+    return new ThenNode(this, f);
+}
 
 //// Reimplement queries with call-chaining
 
