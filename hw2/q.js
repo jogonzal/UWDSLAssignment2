@@ -105,14 +105,18 @@ var auto_thefts_query = new FilterNode(function(element){ return element[13].mat
 
 //// Add Apply and Count nodes
 
-// ...
-
-
-
+// added above
 
 //// Clean the data
 
-var cleanup_query = new ASTNode("...");
+var cleanup_query = new ApplyNode(function(row){
+    return {
+        type:row[13],
+        description:row[15],
+        date:row[17],
+        area:row[18]
+    }
+});
 
 
 //// Implement a call-chaining interface
