@@ -56,12 +56,21 @@ function CountNode() {
 
 CountNode.prototype = Object.create(ASTNode.prototype);
 
-// The CountNode is like a COUNT in LINQ
+// The CountIfNode is like a COUNT + WHERE in LINQ
 function CountIfNode() {
     ASTNode.call(this, "CountIf");
 }
 
 CountIfNode.prototype = Object.create(ASTNode.prototype);
+
+// Cartesian product
+function CartesianProductNode(first, second) {
+    ASTNode.call(this, "CartesianProduct");
+    this.first = first;
+    this.second = second;
+}
+
+CartesianProductNode.prototype = Object.create(ASTNode.prototype);
 
 //// Executing queries
 
@@ -113,6 +122,24 @@ CountIfNode.prototype.execute = function(table){
         }
     }
     return [count];
+}
+
+CartesianProductNode.prototype.execute = function(table){
+    var first = this.first.execute(table);
+    var second = this.second.execute(table);
+    var arr = [];
+    for(var i = 0; i < first.length; i++){
+        var firstElement = first[i];
+        for(var k = 0; k < second.length; k++) {
+            var secondElement = second[k];
+            var elem = {
+                left: firstElement,
+                right: secondElement
+            };
+            arr.push(elem);
+        }
+    }
+    return arr;
 }
 
 //// Write a query
