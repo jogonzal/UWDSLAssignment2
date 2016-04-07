@@ -50,10 +50,26 @@ ASTNode.prototype.execute = function(table) {
     throw new Error("Unimplemented AST node " + this.type)
 }
 
-// ...
+ThenNode.prototype.execute = function(table){
+    var firstValue = this.first.execute(table);
+    var secondValue = this.second.execute(firstValue);
+    return secondValue;
+}
 
+AllNode.prototype.execute = function(table){
+    return table.slice();
+}
 
-
+FilterNode.prototype.execute = function(table){
+    var arr = [];
+    for(var i = 0; i < table.length; i++){
+        var element = table[i];
+        if (this.callback(element)){
+            arr.push(element);
+        }
+    }
+    return arr;
+}
 
 //// Write a query
 // Define the `thefts_query` and `auto_thefts_query` variables
