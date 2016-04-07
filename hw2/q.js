@@ -41,8 +41,20 @@ function ThenNode(first, second) {
 
 ThenNode.prototype = Object.create(ASTNode.prototype);
 
+// The ApplyNode is like a SELECt in LINQ
+function ApplyNode(callback) {
+    ASTNode.call(this, "Apply");
+    this.callback = callback;
+}
 
+ApplyNode.prototype = Object.create(ASTNode.prototype);
 
+// The CountNode is like a COUNT in LINQ
+function CountNode() {
+    ASTNode.call(this, "Count");
+}
+
+CountNode.prototype = Object.create(ASTNode.prototype);
 
 //// Executing queries
 
@@ -69,6 +81,20 @@ FilterNode.prototype.execute = function(table){
         }
     }
     return arr;
+}
+
+ApplyNode.prototype.execute = function(table){
+    var arr = [];
+    for(var i = 0; i < table.length; i++){
+        var element = this.callback(table[i]);
+        arr.push(element);
+    }
+    return arr;
+}
+
+CountNode.prototype.execute = function(table){
+    var res = [table.length];
+    return res;
 }
 
 //// Write a query
