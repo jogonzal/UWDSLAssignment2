@@ -105,7 +105,7 @@ var auto_thefts_query = new FilterNode(function(element){ return element[13].mat
 
 //// Add Apply and Count nodes
 
-// added above
+// added above!
 
 //// Clean the data
 
@@ -140,14 +140,24 @@ ASTNode.prototype.count = function(){
 
 //// Reimplement queries with call-chaining
 
-var cleanup_query_2 = Q; // ...
+var cleanup_query_2 = Q.apply( function(row){
+    return {
+        type:row[13],
+        description:row[15],
+        date:row[17],
+        area:row[18]
+    };
+});
 
-var thefts_query_2 = Q; // ...
+var thefts_query_2 = Q.filter(
+    function(element){
+        return element.type.match(/THEFT/);
+    });
 
-var auto_thefts_query_2 = Q; // ...
-
-
-
+var auto_thefts_query_2 = Q.filter(
+    function(element){
+        return element.type.match(/^VEH-THEFT/);
+    });
 
 //// Optimize filters
 
