@@ -56,6 +56,13 @@ function CountNode() {
 
 CountNode.prototype = Object.create(ASTNode.prototype);
 
+// The CountNode is like a COUNT in LINQ
+function CountIfNode() {
+    ASTNode.call(this, "CountIf");
+}
+
+CountIfNode.prototype = Object.create(ASTNode.prototype);
+
 //// Executing queries
 
 ASTNode.prototype.execute = function(table) {
@@ -95,6 +102,17 @@ ApplyNode.prototype.execute = function(table){
 CountNode.prototype.execute = function(table){
     var res = [table.length];
     return res;
+}
+
+CountIfNode.prototype.execute = function(table){
+    var count = 0;
+    for(var i = 0; i < table.length; i++){
+        var element = table[i];
+        if (this.callback(element)){
+            count++;
+        }
+    }
+    return [count];
 }
 
 //// Write a query
@@ -181,6 +199,7 @@ function AddOptimization(node_type, f) {
     }
 }
 
+// Optimization for two filters
 AddOptimization(ThenNode, function() {
     if (this.first instanceof ThenNode && this.second instanceof FilterNode
         && this.first.second instanceof FilterNode) {
@@ -188,9 +207,15 @@ AddOptimization(ThenNode, function() {
     }
 });
 
-// ...
+// COUNTIF node defined above
 
-
+// Optimization for a count and a filter together
+AddOptimization(ThenNode, function() {
+    if (this.first instanceof ThenNode && this.second instanceof CountNode
+        && this.first.second instanceof FilterNode) {
+        return new ThenNode(this.first.first, new CountIfNode(this.first.second.callback));
+    }
+});
 
 
 //// Internal node types and CountIf
