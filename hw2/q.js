@@ -74,12 +74,8 @@ FilterNode.prototype.execute = function(table){
 //// Write a query
 // Define the `thefts_query` and `auto_thefts_query` variables
 
-var thefts_query = new ASTNode("...");
-
-var auto_thefts_query = new ASTNode("...");
-
-
-
+var thefts_query = new FilterNode(function(element){ return element[13].match(/THEFT/);});
+var auto_thefts_query = new FilterNode(function(element){ return element[13].match(/^VEH-THEFT/);});
 
 //// Add Apply and Count nodes
 
