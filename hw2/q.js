@@ -181,6 +181,13 @@ function AddOptimization(node_type, f) {
     }
 }
 
+AddOptimization(ThenNode, function() {
+    if (this.first instanceof ThenNode && this.second instanceof FilterNode
+        && this.first.second instanceof FilterNode) {
+        return new ThenNode(this.first.first, new FilterNode(this.first.second.callback && this.second.callback));
+    }
+});
+
 // ...
 
 
