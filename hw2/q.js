@@ -247,29 +247,43 @@ AddOptimization(ThenNode, function() {
 
 //// Internal node types and CountIf
 
-// ...
-
-
-
+// CountIf defined above
 
 //// Cartesian Products
 
-// ...
-
-
-
+// cartesian node defined above
 
 //// Joins
 
-// ...
+ASTNode.prototype.product = function(left, right){
+    // first, use a cartesianNode to join left and right
+    return new CartesianProductNode(left, right);
+}
 
-
-
+ASTNode.prototype.join = function(f, left, right){
+    // first, use a cartesianNode to join left and right, then use a filter and an apply
+    return new ThenNode(
+            new ThenNode(
+                new CartesianProductNode(left, right),
+                new FilterNode(function(element){
+                    return f(element.left, element.right);
+                })
+            ),
+            new ApplyNode(function(element){
+                var res = [];
+                var i;
+                for(i = 0; i < element.right.length; i++){
+                    res.push(element.right[i]);
+                }
+                for(var k = i; k < element.left.length; k++){
+                    res.push(element.left[k]);
+                }
+                return res;
+            })
+        );
+}
 
 //// Optimizing joins
-
-// ...
-
 
 
 
