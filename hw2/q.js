@@ -72,6 +72,16 @@ function CartesianProductNode(first, second) {
 
 CartesianProductNode.prototype = Object.create(ASTNode.prototype);
 
+// Cartesian product
+function JoinNode(f, left, right) {
+    ASTNode.call(this, "Join");
+    this.f = f;
+    this.left = left;
+    this.right = right;
+}
+
+JoinNode.prototype = Object.create(ASTNode.prototype);
+
 //// Executing queries
 
 ASTNode.prototype.execute = function(table) {
@@ -137,6 +147,30 @@ CartesianProductNode.prototype.execute = function(table){
                 right: secondElement
             };
             arr.push(elem);
+        }
+    }
+    return arr;
+}
+
+JoinNode.prototype.execute = function(table){
+    var first = this.left.execute(table);
+    var second = this.right.execute(table);
+    var arr = [];
+    for(var i = 0; i < first.length; i++){
+        var firstElement = first[i];
+        for(var k = 0; k < second.length; k++) {
+            var secondElement = second[k];
+            if (this.f(firstElement, secondElement)){
+                var res = [];
+                var i;
+                for(i = 0; i < secondElement.length; i++){
+                    res.push(secondElement[i]);
+                }
+                for(var k = i; k < firstElement.length; k++){
+                    res.push(firstElement[k]);
+                }
+                arr.push(res);
+            }
         }
     }
     return arr;
@@ -242,8 +276,13 @@ AddOptimization(ThenNode, function() {
         && this.first.second instanceof FilterNode) {
         return new ThenNode(this.first.first, new CountIfNode(this.first.second.callback));
     }
+    if (this.first instanceof ThenNode
+            && this.first.first instanceof CartesianProductNode
+            && this.first.second instanceof FilterNode
+        && this.second instanceof ApplyNode) {
+        return new JoinNode(this.first.second.callback, this.first.first.left, this.first.first.right);
+    }
 });
-
 
 //// Internal node types and CountIf
 
@@ -285,7 +324,7 @@ ASTNode.prototype.join = function(f, left, right){
 
 //// Optimizing joins
 
-
+// Optimization above
 
 //// Join on fields
 
