@@ -346,6 +346,10 @@ AddOptimization(ThenNode, function() {
             && this.first.first instanceof CartesianProductNode
             && this.first.second instanceof FilterNode
         && this.second instanceof ApplyNode) {
+        if (this.data != null && this.data.optimizableToJoinNode == true){
+            // This can be optimized into a HashJoinNode
+            return new HashJoinNode(this.data.field, this.first.first.left, this.first.first.right);
+        }
         return new JoinNode(this.first.second.callback, this.first.first.left, this.first.first.right);
     }
 });
@@ -367,7 +371,7 @@ ASTNode.prototype.product = function(left, right){
 
 ASTNode.prototype.join = function(f, left, right){
     // first, use a cartesianNode to join left and right, then use a filter and an apply
-    return new ThenNode(
+    var newNode = new ThenNode(
             new ThenNode(
                 new CartesianProductNode(left, right),
                 new FilterNode(function(element){
@@ -386,6 +390,9 @@ ASTNode.prototype.join = function(f, left, right){
                 return res;
             })
         );
+    // For optimization
+    newNode.data = f.data;
+    return newNode;
 }
 
 //// Optimizing joins
@@ -395,9 +402,15 @@ ASTNode.prototype.join = function(f, left, right){
 //// Join on fields
 
 ASTNode.prototype.on = function(field){
-    return function(left, right){
+    var f = function(left, right){
         return left[field] == right[field];
     };
+    // For optimization purposes
+    f.data = {
+        optimizableToJoinNode : true,
+        field : field
+    };
+    return f;
 }
 
 //// Implement hash joins
