@@ -7,12 +7,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mocha/2.4.5/mocha.min.js"/></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mocha/2.4.5/mocha.min.css"/>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chai/3.5.0/chai.min.js"/></script>
-    <script>
-      $.get("https://data.seattle.gov/api/views/vtr2-wp3r/rows.json", function(data) {
-          window.raw_data = data.data;
-          mocha.run();
-      }, "json");
-    </script>
     <script src="q.js"></script>
     <script src="test.js"></script>
   </head>
@@ -32,5 +26,11 @@
     <div id="mocha"></div>
     <div id="messages"></div>
     <div id="fixtures"></div>
+    <script>
+      $.get("https://data.seattle.gov/api/views/vtr2-wp3r/rows.json", function(data) {
+        window.raw_data = data.data;
+        mocha.run();
+      }, "json");
+    </script>
   </body>
 </html>
