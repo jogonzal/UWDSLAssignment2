@@ -328,10 +328,11 @@ ASTNode.prototype.join = function(f, left, right){
 
 //// Join on fields
 
-// ...
-
-
-
+ASTNode.prototype.on = function(field){
+    return function(left, right){
+        return left[field] == right[field];
+    };
+}
 
 //// Implement hash joins
 
