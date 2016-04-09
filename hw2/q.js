@@ -233,7 +233,8 @@ HashJoinNode.prototype.execute = function(table){
         var secondElement = secondElementHashTable[key];
         if (secondElement != null){
             var cartesian = CartesianJoinArrays(firstElement, secondElement);
-            for(var element in cartesian){
+            for(var i = 0; i < cartesian.length; i++){
+                var element = cartesian[i];
                 var mergedElement = Merge(element.left, element.right);
                 arr.push(mergedElement);
             }
