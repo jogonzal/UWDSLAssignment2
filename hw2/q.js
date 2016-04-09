@@ -72,7 +72,7 @@ function CartesianProductNode(first, second) {
 
 CartesianProductNode.prototype = Object.create(ASTNode.prototype);
 
-// Cartesian product
+// Join
 function JoinNode(f, left, right) {
     ASTNode.call(this, "Join");
     this.f = f;
@@ -81,6 +81,16 @@ function JoinNode(f, left, right) {
 }
 
 JoinNode.prototype = Object.create(ASTNode.prototype);
+
+// HashJoin
+function HashJoinNode(field, left, right) {
+    ASTNode.call(this, "HashJoin");
+    this.field = field;
+    this.left = left;
+    this.right = right;
+}
+
+HashJoinNode.prototype = Object.create(ASTNode.prototype);
 
 //// Executing queries
 
@@ -134,9 +144,7 @@ CountIfNode.prototype.execute = function(table){
     return [count];
 }
 
-CartesianProductNode.prototype.execute = function(table){
-    var first = this.first.execute(table);
-    var second = this.second.execute(table);
+function CartesianJoinArrays(first, second) {
     var arr = [];
     for(var i = 0; i < first.length; i++){
         var firstElement = first[i];
@@ -150,6 +158,11 @@ CartesianProductNode.prototype.execute = function(table){
         }
     }
     return arr;
+}
+CartesianProductNode.prototype.execute = function(table){
+    var first = this.first.execute(table);
+    var second = this.second.execute(table);
+    return CartesianJoinArrays(first, second);
 }
 
 JoinNode.prototype.execute = function(table){
@@ -170,6 +183,59 @@ JoinNode.prototype.execute = function(table){
                     res.push(firstElement[k]);
                 }
                 arr.push(res);
+            }
+        }
+    }
+    return arr;
+}
+
+function BuildHashTable(field, table) {
+    // Using Javascript associative arrays
+    var res = new Array();
+
+    for(var i = 0; i < table.length; i++){
+        var fieldValue = table[i][field];
+        if (res[fieldValue]){
+            // Append to array
+            res[fieldValue].push(table[i]);
+        } else {
+            // Initialize array
+            res[fieldValue] = [table[i]];
+        }
+    }
+
+    return res;
+}
+
+function Merge(firstElement, secondElement) {
+    var res = [];
+    var i;
+    for(i = 0; i < secondElement.length; i++){
+        res.push(secondElement[i]);
+    }
+    for(var k = i; k < firstElement.length; k++){
+        res.push(firstElement[k]);
+    }
+    return res;
+}
+
+HashJoinNode.prototype.execute = function(table){
+    var first = this.left.execute(table);
+    var second = this.right.execute(table);
+
+    var firstElementHashTable = BuildHashTable(this.field, first);
+    var secondElementHashTable = BuildHashTable(this.field, second);
+
+    var arr = [];
+    for(var key in firstElementHashTable){
+        // Check if this has matches in the second hashtable
+        var firstElement = firstElementHashTable[key];
+        var secondElement = secondElementHashTable[key];
+        if (secondElement != null){
+            var cartesian = CartesianJoinArrays(firstElement, secondElement);
+            for(var element in cartesian){
+                var mergedElement = Merge(element.left, element.right);
+                arr.push(mergedElement);
             }
         }
     }
@@ -336,10 +402,7 @@ ASTNode.prototype.on = function(field){
 
 //// Implement hash joins
 
-// ...
-
-
-
+// HashJoin implemented above
 
 //// Optimize joins on fields to hash joins
 
