@@ -347,6 +347,10 @@ AddOptimization(ThenNode, function() {
             && this.first.first instanceof CartesianProductNode
             && this.first.second instanceof FilterNode
         && this.second instanceof ApplyNode) {
+        if (this.first.second.callback.data != null && this.first.second.callback.data.optimizableToJoinNode == true){
+            // This can be optimized into a HashJoinNode
+            return new HashJoinNode(this.first.second.callback.data.field, this.first.first.left, this.first.first.right);
+        }
         return new JoinNode(this.first.second.callback, this.first.first.left, this.first.first.right);
     }
 });
@@ -368,12 +372,15 @@ ASTNode.prototype.product = function(left, right){
 
 ASTNode.prototype.join = function(f, left, right){
     // first, use a cartesianNode to join left and right, then use a filter and an apply
-    return new ThenNode(
+    var filterFunction = function(element){
+        return f(element.left, element.right);
+    };
+    // For optimization
+    filterFunction.data = f.data;
+    var newNode = new ThenNode(
             new ThenNode(
                 new CartesianProductNode(left, right),
-                new FilterNode(function(element){
-                    return f(element.left, element.right);
-                })
+                new FilterNode(filterFunction)
             ),
             new ApplyNode(function(element){
                 var res = [];
@@ -387,6 +394,7 @@ ASTNode.prototype.join = function(f, left, right){
                 return res;
             })
         );
+    return newNode;
 }
 
 //// Optimizing joins
@@ -396,9 +404,15 @@ ASTNode.prototype.join = function(f, left, right){
 //// Join on fields
 
 ASTNode.prototype.on = function(field){
-    return function(left, right){
+    var f = function(left, right){
         return left[field] == right[field];
     };
+    // For optimization purposes
+    f.data = {
+        optimizableToJoinNode : true,
+        field : field
+    };
+    return f;
 }
 
 //// Implement hash joins
